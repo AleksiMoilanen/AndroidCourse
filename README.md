@@ -2,13 +2,14 @@
 
 
 ## FirstApp
-Build Your First Android App in Java - CodeLabs tutorial based app
+[Build Your First Android App in Java - CodeLabs tutorial based app](https://github.com/AleksiMoilanen/AndroidCourse/tree/master/FirstApp)
 
 ## SensorList
-Android Sensors - TutorialPoint tutorial based app
+[Android Sensors - TutorialPoint tutorial based app](https://github.com/AleksiMoilanen/AndroidCourse/tree/master/SensorList)
 
 ## StepCounter
+[StepCounter App](https://github.com/AleksiMoilanen/AndroidCourse/tree/master/StepCounter)
 
 ## MapApp
-Google maps app: 
+[Google maps app:](https://github.com/AleksiMoilanen/AndroidCourse/tree/master/MapApp) 
 - Coordinate search
