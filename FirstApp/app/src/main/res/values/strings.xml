@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">My Application</string>
+
+    <string name="counterText">0</string>
+    <string name="randomInfo">Here is random number between 0 and %1d</string>
+    <string name="toastInfo">Hello Toast!</string>
+
+
+    <string name="toast_text">TOAST</string>
+    <string name="random_text">RANDOM</string>
+    <string name="count_text">COUNT</string>
+    <string name="clear_text">CLEAR</string>
+    <string name="randomNumber">0</string>
+
+</resources>
