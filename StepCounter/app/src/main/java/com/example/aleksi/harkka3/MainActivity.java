@@ -37,15 +37,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         BtnStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View arg0) {
-                numSteps = 0;
                 stepview = (TextView) findViewById(R.id.stepView);
+                numSteps = 0;
 
-                String stepstring = String.valueOf(numSteps);
-                stepview.setText(stepstring);
+                stepview.setText(String.valueOf(numSteps));
 
                 Button startButton = (Button) findViewById(R.id.startButton);
                 startButton.setEnabled(false);
-
                 Button stopButton = (Button) findViewById(R.id.stopButton);
                 stopButton.setEnabled(true);
 
@@ -60,10 +58,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
                 Button startButton = (Button) findViewById(R.id.startButton);
                 startButton.setEnabled(true);
-
                 Button stopButton = (Button) findViewById(R.id.stopButton);
                 stopButton.setEnabled(false);
-
             }
         });
     }
@@ -83,12 +79,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     public void step(long timeNs) {
         stepview = (TextView) findViewById(R.id.stepView);
-        String stepsString = stepview.getText().toString();
 
-        numSteps = Integer.parseInt(stepsString);
+        numSteps = Integer.parseInt(stepview.getText().toString());
         numSteps++;
 
-        stepsString = String.valueOf(numSteps);
-        stepview.setText(stepsString);
+        stepview.setText(String.valueOf(numSteps));
     }
 }
