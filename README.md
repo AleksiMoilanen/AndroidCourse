@@ -10,4 +10,5 @@ Android Sensors - TutorialPoint tutorial based app
 ### StepCounter
 
 ### MapApp
-- Google maps app: Coordinate search
+Google maps app: 
+- Coordinate search
