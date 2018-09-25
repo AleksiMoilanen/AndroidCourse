@@ -12,4 +12,6 @@
 
 ## MapApp
 [Google maps App:](https://github.com/AleksiMoilanen/AndroidCourse/tree/master/MapApp) 
-- Coordinate search
+- Go to coordinates
+- Show my location
+- Show me in the map
