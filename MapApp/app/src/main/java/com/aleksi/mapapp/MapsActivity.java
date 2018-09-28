@@ -54,7 +54,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         } else if (operator == 'L') {
             Log.d("DEBUG_STNA", "Location");
-        } else if (operator == 'L') {
+        } else if (operator == 'M') {
             Log.d("DEBUG_STNA", "Me on the map");
         }
     }
