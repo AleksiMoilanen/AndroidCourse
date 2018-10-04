@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">BLE application</string>
+
+    <string name="no_ble_support">NO BLE SUPPORT</string>
+</resources>
