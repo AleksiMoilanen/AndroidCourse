@@ -57,6 +57,7 @@ public class BluetoothLeListAdapter extends BaseAdapter {
     public View getView(int i, View view, ViewGroup viewGroup) {
 
         ViewHolder viewHolder;
+
         // General ListView optimization code.
         if (view == null) {
             view = mInflator.inflate(R.layout.listitem_device, null);
@@ -67,12 +68,15 @@ public class BluetoothLeListAdapter extends BaseAdapter {
         } else {
             viewHolder = (ViewHolder) view.getTag();
         }
+
         BluetoothDevice device = mLeDevices.get(i);
         final String deviceName = device.getName();
+
         if (deviceName != null && deviceName.length() > 0)
             viewHolder.deviceName.setText(deviceName);
         else
             viewHolder.deviceName.setText("This device is unknown...");
+
         viewHolder.deviceAddress.setText(device.getAddress());
         return view;
     }

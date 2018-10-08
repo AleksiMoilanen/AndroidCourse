@@ -43,7 +43,18 @@
         android:layout_marginTop="35dp"
         android:elevation="0dp"
         android:onClick="onClickReadCharacteristic"
-        android:text="Read Characteristic Heart Rate" />
+        android:text="Read Characteristic" />
+
+    <Button
+        android:id="@+id/writeCharacteristicsButton"
+        android:layout_width="wrap_content"
+        android:layout_height="47dp"
+        android:layout_below="@+id/editText"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
+        android:elevation="0dp"
+        android:onClick="onClickWriteCharacteristic"
+        android:text="Write Characteristic" />
 
     <TextView
         android:id="@+id/textView"
@@ -80,6 +91,17 @@
         android:text="@string/device_description_characteristics"
         android:textSize="18sp"
         android:textStyle="bold" />
+
+    <EditText
+        android:id="@+id/editText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/readCharacteristicsButton"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="42dp"
+        android:ems="10"
+        android:inputType="number"
+        android:singleLine="false" />
 
 
 </RelativeLayout>

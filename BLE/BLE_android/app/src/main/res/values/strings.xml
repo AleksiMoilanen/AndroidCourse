@@ -2,6 +2,7 @@
     <string name="app_name">BLE_android</string>
 
     <string name="scan_button">Scan bluetooth devices</string>
+    <string name="refresh_text">SCANNING BLUETOOTH DEVICES</string>
 
     <string name="device_name">Device name: </string>
     <string name="device_address">Device address: </string>

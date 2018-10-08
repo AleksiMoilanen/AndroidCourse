@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -22,7 +23,9 @@ import android.widget.Toast;
 
 import com.aleksimoilanen.ble_android.adapter.BluetoothLeListAdapter;
 
-public class MainActivity extends ListActivity {
+public class MainActivity extends ListActivity implements SwipeRefreshLayout.OnRefreshListener {
+
+    private SwipeRefreshLayout mSwipeRefreshLayout;
 
     private static final int REQUEST_CODE_COARSE_PERMISSION = 1;
     private static final int REQUEST_CODE_BLUETOOTH_PERMISSION = 2;
@@ -66,6 +69,9 @@ public class MainActivity extends ListActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
+        mSwipeRefreshLayout.setOnRefreshListener(this);
+
         mHandler = new Handler();
 
         mBtManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
@@ -100,7 +106,7 @@ public class MainActivity extends ListActivity {
     @Override
     protected void onListItemClick(ListView list, View view, int pos, long id){
         final BluetoothDevice device = mBLEDeviceListAdapter.getDevice(pos);
-        Toast.makeText(this,  "Device" + device.getName() + " Address: " + device.getAddress(), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this,  "Device: " + device.getName() + "\nAddress: " + device.getAddress(), Toast.LENGTH_SHORT).show();
 
         Intent intent = new Intent(this, DeviceDescriptionActivity.class);
         intent.putExtra("Bluetooth_Device", device);
@@ -108,6 +114,26 @@ public class MainActivity extends ListActivity {
     }
 
     public void scanBtDevices(View view) {
+        if (mBLEscanner != null) {
+            if (true) {
+                // Stops scanning after a pre-defined scan period.
+                mHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        mScanning = false;
+                        mBLEscanner.stopScan(mBluetoothScanCallBack);
+                    }
+                }, SCAN_PERIOD);
+                mScanning = true;
+                mBLEscanner.startScan(mBluetoothScanCallBack);
+            } else {
+                mScanning = false;
+                mBLEscanner.stopScan(mBluetoothScanCallBack);
+            }
+        }
+    }
+
+    public void scanBtDevices() {
         if (mBLEscanner != null) {
             if (true) {
                 // Stops scanning after a pre-defined scan period.
@@ -161,5 +187,18 @@ public class MainActivity extends ListActivity {
                 return;
             }
         }
+    }
+
+    @Override
+    public void onRefresh() {
+        Toast.makeText(this, R.string.refresh_text, Toast.LENGTH_SHORT).show();
+        scanBtDevices();
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+        }, 2000);
     }
 }
