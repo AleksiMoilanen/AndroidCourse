@@ -1,4 +1,4 @@
-package com.aleksi.bleapplication;
+package com.aleksimoilanen.ble_android;
 
 import org.junit.Test;
 

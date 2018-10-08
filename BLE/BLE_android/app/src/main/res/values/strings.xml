@@ -1,5 +1,10 @@
 <resources>
-    <string name="app_name">BLE application</string>
+    <string name="app_name">BLE_android</string>
 
-    <string name="no_ble_support">NO BLE SUPPORT</string>
+    <string name="scan_button">Scan bluetooth devices</string>
+
+    <string name="device_name">Device name: </string>
+    <string name="device_address">Device address: </string>
+    <string name="device_description_services">Device description services: </string>
+    <string name="device_description_characteristics">Device description characteristics: </string>
 </resources>

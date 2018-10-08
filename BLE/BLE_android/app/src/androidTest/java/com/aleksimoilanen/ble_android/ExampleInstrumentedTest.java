@@ -1,4 +1,4 @@
-package com.aleksi.bleapplication;
+package com.aleksimoilanen.ble_android;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("com.aleksi.bleapplication", appContext.getPackageName());
+        assertEquals("com.aleksimoilanen.ble_android", appContext.getPackageName());
     }
 }
