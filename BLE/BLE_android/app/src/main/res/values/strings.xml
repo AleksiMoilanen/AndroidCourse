@@ -11,7 +11,7 @@
 
     <string name="wrong_service">Service not found</string>
     <string name="wrong_chara">Characteristics not found</string>
-    <string name="write_ok">Characteristics ok!</string>
+    <string name="write_ok">Characteristics sent!</string>
 
     <string name="invalid_serviceHex">Service value is invalid</string>
     <string name="invalid_characteristicHex">Characteristic value is invalid</string>

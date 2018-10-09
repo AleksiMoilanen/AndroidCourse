@@ -14,6 +14,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,6 +41,12 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
     private UUID servUUID = convertFromInteger(0xaaa0);
     private UUID charUUID = convertFromInteger(0xaaa1);
     private UUID descUUID = convertFromInteger(0x2901);
+
+
+    private UUID ledService_UUID = convertFromInteger(0xfff0);
+    private UUID ledChar_UUID = convertFromInteger(0xfff1);
+
+    private SeekBar seekBar;
 
     public UUID convertFromInteger(int i) {
         final long MSB = 0x0000000000001000L;
@@ -158,6 +165,8 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
 
         BluetoothDevice device = getIntent().getExtras().getParcelable("Bluetooth_Device");
 
+        seekBar = (SeekBar) findViewById(R.id.seekBar);
+
         descriptionMac = (TextView) findViewById(R.id.device_description_mac);
         descriptionServices = (TextView) findViewById(R.id.device_description_services);
         descriptionCharacteristic = (TextView) findViewById(R.id.device_description_characteristics);
@@ -167,6 +176,23 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
         descriptionMac.setText(device.getAddress());
         descriptionServices.setText("");
         descriptionCharacteristic.setText("");
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                writeCharacteristic(progress, false, ledService_UUID, ledChar_UUID);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
 
         connect(device);
     }
@@ -212,7 +238,73 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
     }
 
     //Write to bluetooth device
+    public void writeCharacteristic(int val, boolean print){
+        if (mBluetoothGatt == null) {
+            Log.e(TAG, "lost connection");
+            return;
+        }
+
+        BluetoothGattService Service = mBluetoothGatt.getService(servUUID);
+        if (Service == null) {
+            Log.e(TAG, "service not found!");
+            if (print) Toast.makeText(DeviceDescriptionActivity.this, R.string.wrong_service, Toast.LENGTH_LONG).show();
+            return;
+        }
+        BluetoothGattCharacteristic Characteristic = Service.getCharacteristic(charUUID);
+        if (Characteristic == null) {
+            Log.e(TAG, "char not found!");
+            if (print) Toast.makeText(DeviceDescriptionActivity.this, R.string.wrong_chara, Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        byte[] value = new byte[1];
+        value[0] = (byte) (val & 0xFF);
+
+        Characteristic.setValue(value);
+        mBluetoothGatt.writeCharacteristic(Characteristic);
+    }
+
+    public void writeCharacteristic(int val, boolean print, UUID serviceUUID, UUID charaUUID){
+
+        if (mBluetoothGatt == null) {
+            Log.e(TAG, "lost connection");
+            return;
+        }
+
+        BluetoothGattService Service = mBluetoothGatt.getService(serviceUUID);
+        if (Service == null) {
+            Log.e(TAG, "service not found!");
+            if (print) Toast.makeText(DeviceDescriptionActivity.this, R.string.wrong_service, Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        BluetoothGattCharacteristic Characteristic = Service.getCharacteristic(charaUUID);
+        if (Characteristic == null) {
+            Log.e(TAG, "char not found!");
+            if (print) Toast.makeText(DeviceDescriptionActivity.this, R.string.wrong_chara, Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        byte[] value = new byte[1];
+        value[0] = (byte) (val & 0xFF);
+
+        Characteristic.setValue(value);
+        mBluetoothGatt.writeCharacteristic(Characteristic);
+
+        if (print) Toast.makeText(DeviceDescriptionActivity.this, R.string.write_ok, Toast.LENGTH_LONG).show();
+
+        return;
+    }
+
     public void onClickWriteCharacteristic(View view){
+
+        EditText editValue = findViewById(R.id.editText);
+        int val = Integer.valueOf(String.valueOf(editValue.getText()));
+
+        writeCharacteristic(val, true);
+    }
+
+    public void onClickWriteCustomCharacteristic(View view){
 
         EditText editValue = findViewById(R.id.editText);
         EditText editService = findViewById(R.id.editText3);
@@ -252,38 +344,6 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
             return;
         }
 
-
-        Log.d(TAG, String.valueOf(tempServiceUUID));
-        Log.d(TAG, String.valueOf(tempCharacteristicUUID));
-
-        if (mBluetoothGatt == null) {
-            Log.e(TAG, "lost connection");
-            return;
-        }
-
-        //BluetoothGattService Service = mBluetoothGatt.getService(servUUID);
-        BluetoothGattService Service = mBluetoothGatt.getService(tempServiceUUID);
-        if (Service == null) {
-            Log.e(TAG, "service not found!");
-            Toast.makeText(DeviceDescriptionActivity.this, R.string.wrong_service, Toast.LENGTH_LONG).show();
-            return;
-        }
-        //BluetoothGattCharacteristic Characteristic = Service.getCharacteristic(charUUID);
-        BluetoothGattCharacteristic Characteristic = Service.getCharacteristic(tempCharacteristicUUID);
-        if (Characteristic == null) {
-            Log.e(TAG, "char not found!");
-            Toast.makeText(DeviceDescriptionActivity.this, R.string.wrong_chara, Toast.LENGTH_LONG).show();
-            return;
-        }
-
-        byte[] value = new byte[1];
-        value[0] = (byte) (val & 0xFF);
-
-        Characteristic.setValue(value);
-        mBluetoothGatt.writeCharacteristic(Characteristic);
-
-        Toast.makeText(DeviceDescriptionActivity.this, R.string.write_ok, Toast.LENGTH_LONG).show();
-
-        return;
+        writeCharacteristic(val, true, tempServiceUUID, tempCharacteristicUUID);
     }
 }
