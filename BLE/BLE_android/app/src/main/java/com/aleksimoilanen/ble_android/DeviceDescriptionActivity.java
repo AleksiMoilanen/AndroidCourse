@@ -18,6 +18,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.nio.ByteBuffer;
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.IntStream;
@@ -180,16 +181,19 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
     public void onClickReadCharacteristic(View button) {
 
         BluetoothGattCharacteristic Characteristic = mBluetoothGatt.getService(servUUID).getCharacteristic(charUUID);
+        byte[] data;
 
         Log.i(TAG, "Read Characteristic");
 
         if (charUUID.equals(Characteristic.getUuid())) {
 
-            byte[] data = Characteristic.getValue();
-            Log.i(TAG, String.valueOf(data));
+            data = Characteristic.getValue();
+            ByteBuffer wrap = ByteBuffer.wrap(data);
 
-            int value = Characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
-            Log.i(TAG, String.valueOf(value));
+            int paskempi = Integer.valueOf(wrap.get());
+
+            Log.i(TAG, String.valueOf(data) + " " + paskempi);
+            Toast.makeText(DeviceDescriptionActivity.this, "Arduinon arvo: " + paskempi, Toast.LENGTH_LONG).show();
         }
 
         /*
@@ -207,24 +211,68 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
         */
     }
 
+    //Write to bluetooth device
     public void onClickWriteCharacteristic(View view){
 
-        EditText editText = findViewById(R.id.editText);
-        int val = Integer.valueOf(String.valueOf(editText.getText()));
+        EditText editValue = findViewById(R.id.editText);
+        EditText editService = findViewById(R.id.editText3);
+        EditText editCharacteristic = findViewById(R.id.editText2);
+
+        String serviceHex, characteristicHex;
+
+        UUID tempServiceUUID, tempCharacteristicUUID;
+
+        int val = Integer.valueOf(String.valueOf(editValue.getText()));
+
+        try
+        {
+            serviceHex = String.valueOf(editService.getText());
+            int value = Integer.parseInt(serviceHex, 16);
+            tempServiceUUID = UUID.fromString("000" + serviceHex + "-0000-1000-8000-00805f9b34fb");
+            Log.d(TAG, "TOIMII");
+        }
+        catch(NumberFormatException nfe)
+        {
+            Log.d(TAG, "EI TOIMI");
+            Toast.makeText(DeviceDescriptionActivity.this, R.string.invalid_serviceHex, Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        try
+        {
+            characteristicHex = String.valueOf(editCharacteristic.getText());
+            int value = Integer.parseInt(characteristicHex, 16);
+            tempCharacteristicUUID = UUID.fromString("000" + characteristicHex + "-0000-1000-8000-00805f9b34fb");
+            Log.d(TAG, "TOIMII");
+        }
+        catch(NumberFormatException nfe)
+        {
+            Log.d(TAG, "EI TOIMI");
+            Toast.makeText(DeviceDescriptionActivity.this, R.string.invalid_characteristicHex, Toast.LENGTH_LONG).show();
+            return;
+        }
+
+
+        Log.d(TAG, String.valueOf(tempServiceUUID));
+        Log.d(TAG, String.valueOf(tempCharacteristicUUID));
 
         if (mBluetoothGatt == null) {
             Log.e(TAG, "lost connection");
             return;
         }
 
-        BluetoothGattService Service = mBluetoothGatt.getService(servUUID);
+        //BluetoothGattService Service = mBluetoothGatt.getService(servUUID);
+        BluetoothGattService Service = mBluetoothGatt.getService(tempServiceUUID);
         if (Service == null) {
             Log.e(TAG, "service not found!");
+            Toast.makeText(DeviceDescriptionActivity.this, R.string.wrong_service, Toast.LENGTH_LONG).show();
             return;
         }
-        BluetoothGattCharacteristic Characteristic = Service.getCharacteristic(charUUID);
+        //BluetoothGattCharacteristic Characteristic = Service.getCharacteristic(charUUID);
+        BluetoothGattCharacteristic Characteristic = Service.getCharacteristic(tempCharacteristicUUID);
         if (Characteristic == null) {
             Log.e(TAG, "char not found!");
+            Toast.makeText(DeviceDescriptionActivity.this, R.string.wrong_chara, Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -233,6 +281,9 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
 
         Characteristic.setValue(value);
         mBluetoothGatt.writeCharacteristic(Characteristic);
+
+        Toast.makeText(DeviceDescriptionActivity.this, R.string.write_ok, Toast.LENGTH_LONG).show();
+
         return;
     }
 }

@@ -20,6 +20,21 @@
 #define BLE_DESC_NUM "2901"
 #define BLE_DESC_VAL "ARVO"
 
+// Generic catch-all implementation.
+template <typename T_ty> struct TypeInfo { static const char * name; };
+template <typename T_ty> const char * TypeInfo<T_ty>::name = "unknown";
+
+// Handy macro to make querying stuff easier.
+#define TYPE_NAME(var) TypeInfo< typeof(var) >::name
+
+// Handy macro to make defining stuff easier.
+#define MAKE_TYPE_INFO(type)  template <> const char * TypeInfo<type>::name = #type;
+
+// Type-specific implementations.
+MAKE_TYPE_INFO( int )
+MAKE_TYPE_INFO( float )
+MAKE_TYPE_INFO( short )
+
 BLEPeripheral BLE = BLEPeripheral(BLE_REQ, BLE_RDY, BLE_RST);
 
 int buttonState;
@@ -38,6 +53,7 @@ BLEDescriptor descriptor = BLEDescriptor(BLE_DESC_NUM, BLE_DESC_VAL); //https://
 
 volatile int toggle = 0;
 volatile unsigned int counter = 0;
+
 
 void setup() {
 	Serial.begin(9600);
@@ -110,10 +126,7 @@ void loop() {
                 // atleast one second has passed since last increment
                 lastSent = millis();
 
-                // increment characteristic value
-                //characteristic.setValue(characteristic.value() + 1);
-
-                Serial.print(F("counter = "));
+                Serial.print(F("Value = "));
                 Serial.println(characteristic.value(), DEC);
             }
      
@@ -142,11 +155,15 @@ void loop() {
 }
 
 void setCharacteristicValue() {
-    int reading = rand();
+    //int reading = rand();
+    int reading = random(1, 5);
+    //int reading = 1;
 
     characteristic.setValue(reading);
 
-    Serial.print(F("Temperature: ")); Serial.print(reading); Serial.println(F("C"));
+    Serial.print(F("Temperature: "));
+    Serial.print(reading);
+    Serial.println(characteristic.value());
     lastReading = reading;
 }
 
@@ -168,7 +185,14 @@ void characteristicWritten(BLECentral& central, BLECharacteristic& chara) {
     // characteristic value written event handler
 
     Serial.print(F("Characteristic event, writen: "));
-    Serial.println(characteristic.value(), DEC);
+    Serial.println(characteristic.value());
+
+    int val = (characteristic.value(), DEC);
+    //characteristic.setValue(val);
+    
+    Serial.println(TYPE_NAME(val));
+    Serial.println(sizeof(characteristic.value()));
+    Serial.println(TYPE_NAME(characteristic.value()));
     counter = characteristic.value();
 }
 
@@ -199,4 +223,3 @@ ISR(TIMER1_COMPA_vect) {
         }
     }
 }
-
