@@ -26,7 +26,7 @@ import java.util.stream.IntStream;
 
 public class DeviceDescriptionActivity extends AppCompatActivity {
 
-    String TAG = "DEV_DEBUG_DDA";
+    String TAG = "paska";
 
     private BluetoothGatt mBluetoothGatt;
     private static final int STATE_DISCONNECTED = 0;
@@ -42,11 +42,12 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
     private UUID charUUID = convertFromInteger(0xaaa1);
     private UUID descUUID = convertFromInteger(0x2901);
 
-
     private UUID ledService_UUID = convertFromInteger(0xfff0);
     private UUID ledChar_UUID = convertFromInteger(0xfff1);
 
     private SeekBar seekBar;
+
+    private boolean notifySubState = false;
 
     public UUID convertFromInteger(int i) {
         final long MSB = 0x0000000000001000L;
@@ -204,39 +205,6 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
         }
     }
 
-    public void onClickReadCharacteristic(View button) {
-
-        BluetoothGattCharacteristic Characteristic = mBluetoothGatt.getService(servUUID).getCharacteristic(charUUID);
-        byte[] data;
-
-        Log.i(TAG, "Read Characteristic");
-
-        if (charUUID.equals(Characteristic.getUuid())) {
-
-            data = Characteristic.getValue();
-            ByteBuffer wrap = ByteBuffer.wrap(data);
-
-            int paskempi = Integer.valueOf(wrap.get());
-
-            Log.i(TAG, String.valueOf(data) + " " + paskempi);
-            Toast.makeText(DeviceDescriptionActivity.this, "Arduinon arvo: " + paskempi, Toast.LENGTH_LONG).show();
-        }
-
-        /*
-        final List<BluetoothGattCharacteristic> characteristics = mBluetoothGatt.getService(serviceUUID).getCharacteristics();
-        descriptionServices.append("Reading Characteristics: \n");
-        for (int i = 0; i < characteristics.size(); i++) {
-            final int localIndex = i;
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    descriptionServices.append(characteristics.get(localIndex).getUuid().toString() + "\n");
-                }
-            });
-        }
-        */
-    }
-
     //Write to bluetooth device
     public void writeCharacteristic(int val, boolean print){
         if (mBluetoothGatt == null) {
@@ -293,7 +261,54 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
 
         if (print) Toast.makeText(DeviceDescriptionActivity.this, R.string.write_ok, Toast.LENGTH_LONG).show();
 
-        return;
+    }
+
+    public void onClickReadCharacteristic(View button) {
+
+        BluetoothGattCharacteristic Characteristic = mBluetoothGatt.getService(servUUID).getCharacteristic(charUUID);
+        byte[] data;
+
+        Log.i(TAG, "Read Characteristic");
+
+        if (charUUID.equals(Characteristic.getUuid())) {
+
+            data = Characteristic.getValue();
+            ByteBuffer wrap = ByteBuffer.wrap(data);
+
+            int paskempi = Integer.valueOf(wrap.get());
+
+            Log.i(TAG, String.valueOf(data) + " " + paskempi);
+            Toast.makeText(DeviceDescriptionActivity.this, "Arduinon arvo: " + paskempi, Toast.LENGTH_LONG).show();
+        }
+
+        /*
+        final List<BluetoothGattCharacteristic> characteristics = mBluetoothGatt.getService(serviceUUID).getCharacteristics();
+        descriptionServices.append("Reading Characteristics: \n");
+        for (int i = 0; i < characteristics.size(); i++) {
+            final int localIndex = i;
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    descriptionServices.append(characteristics.get(localIndex).getUuid().toString() + "\n");
+                }
+            });
+        }
+        */
+    }
+
+    public void onClickChangeNotifyState(View view){
+        Button notifyButton = (Button) findViewById(R.id.notifyButton);
+
+        if(notifySubState){
+            notifyButton.setText("Start notify");
+            notifySubState = false;
+        }
+        else {
+            notifyButton.setText("Stop notify");
+            notifySubState = true;
+        }
+
+        Log.i(TAG, String.valueOf(notifySubState));
     }
 
     public void onClickWriteCharacteristic(View view){
