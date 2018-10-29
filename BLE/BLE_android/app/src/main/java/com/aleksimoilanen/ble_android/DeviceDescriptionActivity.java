@@ -18,6 +18,8 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.w3c.dom.Text;
+
 import java.nio.ByteBuffer;
 import java.text.DecimalFormat;
 import java.util.List;
@@ -36,14 +38,17 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
     private TextView descriptionMac;
     private TextView descriptionServices;
     private TextView descriptionCharacteristic;
-    private Button buttonReadCharacteristic;
 
     private UUID servUUID = convertFromInteger(0xaaa0);
     private UUID charUUID = convertFromInteger(0xaaa1);
     private UUID descUUID = convertFromInteger(0x2901);
 
+    //Notify descriptor UUID
+    private UUID cccdUUID = convertFromInteger(0x2902);
+
     private UUID ledService_UUID = convertFromInteger(0xfff0);
     private UUID ledChar_UUID = convertFromInteger(0xfff1);
+
 
     private SeekBar seekBar;
 
@@ -103,15 +108,12 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
                     }
                 });
             }*/
-
-            buttonReadCharacteristic.setVisibility(View.VISIBLE);
         }
 
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicRead(gatt, characteristic, status);
             Log.i(TAG, "CHARACTERISTIC_READ");
-
             readCounterCharacteristic(characteristic);
         }
 
@@ -119,6 +121,7 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicChanged(gatt, characteristic);
             Log.i(TAG, "CHARACTERISTIC_CHANGED");
+            printharacteristic();
         }
 
         @Override
@@ -147,8 +150,8 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
             String asd = characteristic.getStringValue(0);
             int value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
             byte[] data = characteristic.getValue();
-            Log.i(TAG, String.valueOf(data));
-            Log.i(TAG, String.valueOf(value));
+            Log.i(TAG, "Data" + String.valueOf(data));
+            Log.i(TAG, "Value" + String.valueOf(value));
             Log.i(TAG, asd);
         }
     }
@@ -171,8 +174,6 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
         descriptionMac = (TextView) findViewById(R.id.device_description_mac);
         descriptionServices = (TextView) findViewById(R.id.device_description_services);
         descriptionCharacteristic = (TextView) findViewById(R.id.device_description_characteristics);
-        buttonReadCharacteristic = (Button) findViewById(R.id.readCharacteristicsButton);
-        buttonReadCharacteristic.setVisibility(View.INVISIBLE);
 
         descriptionMac.setText(device.getAddress());
         descriptionServices.setText("");
@@ -205,7 +206,8 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
         }
     }
 
-    //Write to bluetooth device
+    // Write characteristic to bluetooth device (default service and characteristic)
+    // servUUID, charUUID = default
     public void writeCharacteristic(int val, boolean print){
         if (mBluetoothGatt == null) {
             Log.e(TAG, "lost connection");
@@ -232,6 +234,8 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
         mBluetoothGatt.writeCharacteristic(Characteristic);
     }
 
+    // Write custom characteristic to custom service and characteristic
+    // serviceUUID, charaUUID = custom
     public void writeCharacteristic(int val, boolean print, UUID serviceUUID, UUID charaUUID){
 
         if (mBluetoothGatt == null) {
@@ -263,6 +267,9 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
 
     }
 
+
+    // Read characteristic from device
+    // servUUID, charUUID
     public void onClickReadCharacteristic(View button) {
 
         BluetoothGattCharacteristic Characteristic = mBluetoothGatt.getService(servUUID).getCharacteristic(charUUID);
@@ -275,10 +282,10 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
             data = Characteristic.getValue();
             ByteBuffer wrap = ByteBuffer.wrap(data);
 
-            int paskempi = Integer.valueOf(wrap.get());
+            int value = Integer.valueOf(wrap.get());
 
-            Log.i(TAG, String.valueOf(data) + " " + paskempi);
-            Toast.makeText(DeviceDescriptionActivity.this, "Arduinon arvo: " + paskempi, Toast.LENGTH_LONG).show();
+            Log.i(TAG, String.valueOf(value));
+            Toast.makeText(DeviceDescriptionActivity.this, "Arduinon arvo: " + value, Toast.LENGTH_LONG).show();
         }
 
         /*
@@ -296,29 +303,72 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
         */
     }
 
+    //Change notify state between enabled/disabled (with notifyButton)
     public void onClickChangeNotifyState(View view){
         Button notifyButton = (Button) findViewById(R.id.notifyButton);
+        BluetoothGattCharacteristic characteristic = mBluetoothGatt.getService(servUUID).getCharacteristic(charUUID);
+        BluetoothGattDescriptor descriptor = characteristic.getDescriptor(cccdUUID);
 
-        if(notifySubState){
-            notifyButton.setText("Start notify");
-            notifySubState = false;
-        }
-        else {
-            notifyButton.setText("Stop notify");
-            notifySubState = true;
+        if(charUUID.equals(characteristic.getUuid())){
+            if(notifySubState){
+                notifyButton.setText("Start notify");
+                mBluetoothGatt.setCharacteristicNotification(characteristic, false);
+                notifySubState = false;
+
+                descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+                mBluetoothGatt.writeDescriptor(descriptor);
+                Log.d(TAG, "Don't notify pls");
+            }
+            else {
+                notifyButton.setText("Stop notify");
+                mBluetoothGatt.setCharacteristicNotification(characteristic, true);
+                notifySubState = true;
+
+                descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                mBluetoothGatt.writeDescriptor(descriptor);
+                Log.d(TAG, "Notify pls");
+            }
         }
 
         Log.i(TAG, String.valueOf(notifySubState));
     }
 
+    public void printharacteristic(){
+        TextView charValue = (TextView) findViewById(R.id.charValue);
+
+        BluetoothGattCharacteristic characteristic = mBluetoothGatt.getService(servUUID).getCharacteristic(charUUID);
+
+        byte[] data;
+
+        if (charUUID.equals(characteristic.getUuid())) {
+
+            data = characteristic.getValue();
+            ByteBuffer wrap = ByteBuffer.wrap(data);
+
+            int value = Integer.valueOf(wrap.get());
+
+            Log.i(TAG, String.valueOf(value));
+            charValue.setText(String.valueOf(value));
+        }
+
+    }
+
+    // Write custom characteristic value (from editText) to default service and characteristic
     public void onClickWriteCharacteristic(View view){
 
         EditText editValue = findViewById(R.id.editText);
-        int val = Integer.valueOf(String.valueOf(editValue.getText()));
 
-        writeCharacteristic(val, true);
+        try {
+            int val = Integer.valueOf(String.valueOf(editValue.getText()));
+
+            writeCharacteristic(val, true);
+        }
+        catch (IllegalArgumentException e){
+            Toast.makeText(this, "Syötä lähetettävä arvo", Toast.LENGTH_SHORT).show();
+        }
     }
 
+    // Write custom characteristic value (from editText) to custom service (editText3) and characteristic (editText2)
     public void onClickWriteCustomCharacteristic(View view){
 
         EditText editValue = findViewById(R.id.editText);
@@ -329,7 +379,6 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
 
         UUID tempServiceUUID, tempCharacteristicUUID;
 
-        int val = Integer.valueOf(String.valueOf(editValue.getText()));
 
         try
         {
@@ -359,6 +408,14 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
             return;
         }
 
-        writeCharacteristic(val, true, tempServiceUUID, tempCharacteristicUUID);
+        try {
+
+            int val = Integer.valueOf(String.valueOf(editValue.getText()));
+            writeCharacteristic(val, true, tempServiceUUID, tempCharacteristicUUID);
+
+        }
+        catch (IllegalArgumentException e){
+            Toast.makeText(this, "Syötä lähetettävä arvo", Toast.LENGTH_SHORT).show();
+        }
     }
 }

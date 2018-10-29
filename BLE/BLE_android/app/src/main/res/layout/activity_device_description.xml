@@ -204,9 +204,9 @@
         android:layout_below="@+id/writeCharacteristicsButton2"
         android:layout_alignParentStart="true"
         android:layout_alignParentEnd="true"
-        android:layout_marginStart="69dp"
-        android:layout_marginTop="49dp"
-        android:layout_marginEnd="69dp"
+        android:layout_marginStart="68dp"
+        android:layout_marginTop="35dp"
+        android:layout_marginEnd="70dp"
         android:max="255"
         android:progress="128" />
 
@@ -214,20 +214,28 @@
         android:id="@+id/notifyButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="42dp"
-        android:layout_toEndOf="@+id/textView2"
+        android:layout_alignTop="@+id/charValue"
+        android:layout_alignBottom="@+id/charValue"
+        android:layout_marginStart="49dp"
+        android:layout_marginTop="-5dp"
+        android:layout_marginBottom="-4dp"
+        android:layout_toEndOf="@+id/charValue"
         android:onClick="onClickChangeNotifyState"
         android:text="Start notify" />
 
     <TextView
-        android:id="@+id/textView5"
-        android:layout_width="103dp"
-        android:layout_height="39dp"
-        android:layout_alignTop="@+id/notifyButton"
-        android:layout_marginEnd="-46dp"
-        android:layout_toStartOf="@+id/readCharacteristicsButton"
-        android:text="TextView" />
+        android:id="@+id/charValue"
+        android:layout_width="108dp"
+        android:layout_height="51dp"
+        android:layout_below="@+id/seekBar"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="69dp"
+        android:layout_marginTop="30dp"
+        android:gravity="center"
+        android:text="Char value"
+        android:textAlignment="center"
+        android:textSize="18sp"
+        android:textStyle="bold" />
 
 
 </RelativeLayout>
