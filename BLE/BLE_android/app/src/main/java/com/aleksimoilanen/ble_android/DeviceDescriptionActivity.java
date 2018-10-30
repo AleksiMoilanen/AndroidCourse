@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.nfc.Tag;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -22,8 +23,10 @@ import org.w3c.dom.Text;
 
 import java.nio.ByteBuffer;
 import java.text.DecimalFormat;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 public class DeviceDescriptionActivity extends AppCompatActivity {
@@ -40,7 +43,11 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
     private TextView descriptionCharacteristic;
 
     private UUID servUUID = convertFromInteger(0xaaa0);
+
     private UUID charUUID = convertFromInteger(0xaaa1);
+    private UUID temperatureCharUUID = convertFromInteger(0xaaa2);
+    private UUID humidityCharUUID = convertFromInteger(0xaaa3);
+
     private UUID descUUID = convertFromInteger(0x2901);
 
     //Notify descriptor UUID
@@ -121,7 +128,7 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicChanged(gatt, characteristic);
             Log.i(TAG, "CHARACTERISTIC_CHANGED");
-            printharacteristic();
+            printharacteristic(characteristic);
         }
 
         @Override
@@ -304,9 +311,25 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
     }
 
     //Change notify state between enabled/disabled (with notifyButton)
-    public void onClickChangeNotifyState(View view){
+    public void onClickChangeNotifyState(View view) throws InterruptedException {
+
         Button notifyButton = (Button) findViewById(R.id.notifyButton);
-        BluetoothGattCharacteristic characteristic = mBluetoothGatt.getService(servUUID).getCharacteristic(charUUID);
+        final BluetoothGattCharacteristic tempCharacteristic = mBluetoothGatt.getService(servUUID).getCharacteristic(temperatureCharUUID);
+        BluetoothGattCharacteristic humCharacteristic = mBluetoothGatt.getService(servUUID).getCharacteristic(humidityCharUUID);
+
+        if(notifySubState){
+            notifyButton.setText("Start notify");
+            setNotify(tempCharacteristic, false);
+            TimeUnit.MILLISECONDS.sleep(100);
+            setNotify(humCharacteristic, false);
+        } else {
+            notifyButton.setText("Stop notify");
+            setNotify(tempCharacteristic, true);
+            TimeUnit.MILLISECONDS.sleep(100);
+            setNotify(humCharacteristic, true);
+        }
+
+        /*BluetoothGattCharacteristic characteristic = mBluetoothGatt.getService(servUUID).getCharacteristic(charUUID);
         BluetoothGattDescriptor descriptor = characteristic.getDescriptor(cccdUUID);
 
         if(charUUID.equals(characteristic.getUuid())){
@@ -328,19 +351,44 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
                 mBluetoothGatt.writeDescriptor(descriptor);
                 Log.d(TAG, "Notify pls");
             }
-        }
+        }*/
 
         Log.i(TAG, String.valueOf(notifySubState));
     }
 
-    public void printharacteristic(){
-        TextView charValue = (TextView) findViewById(R.id.charValue);
+    private void setNotify(BluetoothGattCharacteristic characteristic, boolean state) {
 
-        BluetoothGattCharacteristic characteristic = mBluetoothGatt.getService(servUUID).getCharacteristic(charUUID);
+        BluetoothGattDescriptor descriptor = characteristic.getDescriptor(cccdUUID);
+
+        if (!state) {
+            Log.i(TAG, "Set notify false");
+            mBluetoothGatt.setCharacteristicNotification(characteristic, false);
+            notifySubState = false;
+
+            descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+            mBluetoothGatt.writeDescriptor(descriptor);
+        } else {
+            Log.i(TAG, "Set notify true");
+            mBluetoothGatt.setCharacteristicNotification(characteristic, true);
+            notifySubState = true;
+
+            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+            mBluetoothGatt.writeDescriptor(descriptor);
+        }
+    }
+
+    public void printharacteristic(BluetoothGattCharacteristic characteristic){
+        TextView charValue = (TextView) findViewById(R.id.charValue);
 
         byte[] data;
 
-        if (charUUID.equals(characteristic.getUuid())) {
+        //if (charUUID.equals(characteristic.getUuid())) {
+
+
+
+            //int value = Integer.valueOf(wrap.get());
+
+            Log.i(TAG, String.valueOf(characteristic.getUuid()));
 
             data = characteristic.getValue();
             ByteBuffer wrap = ByteBuffer.wrap(data);
@@ -348,9 +396,19 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
             int value = Integer.valueOf(wrap.get());
 
             Log.i(TAG, String.valueOf(value));
-            charValue.setText(String.valueOf(value));
-        }
 
+
+            for (int i = 0; i < 6; i++){
+                Log.i(TAG, String.valueOf(i) + " " + String.valueOf(characteristic.getFloatValue(BluetoothGattCharacteristic.FORMAT_FLOAT, i)));
+                Log.i(TAG, String.valueOf(i) + " " + String.valueOf(characteristic.getFloatValue(BluetoothGattCharacteristic.FORMAT_SFLOAT, i)));
+            }
+
+
+            //Log.i(TAG, String.valueOf(value));
+            //charValue.setText(String.valueOf(value));
+
+            //new UpdateThingspeakTask(value, 1.1f).execute();
+        //}
     }
 
     // Write custom characteristic value (from editText) to default service and characteristic

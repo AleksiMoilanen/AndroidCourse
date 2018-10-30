@@ -19,6 +19,8 @@
 #define BLE_NAME "Bluetooth Laite"
 #define BLE_SER "AAA0"
 #define BLE_CHAR "AAA1"
+#define BLE_CHAR_TEMP "AAA2"
+#define BLE_CHAR_HUM "AAA3"
 #define BLE_DESC_NUM "2901"
 #define BLE_DESC_VAL "ARVO"
 
@@ -26,7 +28,6 @@
 #define LED_CHAR "FFF1"
 #define LED_DESC_NUM "2904"
 #define LED_DESC_VAL "LED"
-
 
 BLEPeripheral BLE = BLEPeripheral(BLE_REQ, BLE_RDY, BLE_RST);
 
@@ -39,11 +40,15 @@ unsigned long debounceDelay = 50;
 float lastReading;
 unsigned long long  lastSent = 0;
 
+int charCounter = 0;
+
 boolean notifySub = false;
 
 BLEService service = BLEService(BLE_SER); //https://www.bluetooth.com/specifications/gatt/services
 //BLEFloatCharacteristic characteristic = BLEFloatCharacteristic(BLE_CHAR, BLERead | BLEWrite | BLEWriteWithoutResponse | BLENotify); https://www.bluetooth.com/specifications/gatt/characteristics
 BLEUnsignedShortCharacteristic characteristic = BLEUnsignedShortCharacteristic(BLE_CHAR, BLERead | BLEWrite | BLEWriteWithoutResponse | BLENotify /*| BLEIndicate*/);
+BLEFloatCharacteristic temperatureCharacteristic = BLEFloatCharacteristic(BLE_CHAR_TEMP, BLERead | BLENotify /*| BLEIndicate*/);
+BLEFloatCharacteristic humidityCharacteristic = BLEFloatCharacteristic(BLE_CHAR_HUM, BLERead | BLENotify /*| BLEIndicate*/);
 BLEDescriptor descriptor = BLEDescriptor(BLE_DESC_NUM, BLE_DESC_VAL); //https://www.bluetooth.com/specifications/gatt/descriptors
 
 BLEService ledService = BLEService(LED_SER);
@@ -75,6 +80,8 @@ void setup() {
     BLE.setAdvertisedServiceUuid(service.uuid());
     BLE.addAttribute(service);
     BLE.addAttribute(characteristic);
+    BLE.addAttribute(temperatureCharacteristic);
+    BLE.addAttribute(humidityCharacteristic);
     BLE.addAttribute(descriptor);
   
     BLE.setAdvertisedServiceUuid(ledService.uuid());
@@ -88,27 +95,25 @@ void setup() {
     characteristic.setEventHandler(BLEWritten, characteristicWritten);
     characteristic.setEventHandler(BLESubscribed, characteristicSubscribed);
     characteristic.setEventHandler(BLEUnsubscribed, characteristicUnsubscribed);
-  
+
+    temperatureCharacteristic.setEventHandler(BLESubscribed, tempCharacteristicSubscribed);
+    temperatureCharacteristic.setEventHandler(BLEUnsubscribed, tempCharacteristicUnsubscribed);
+
+    humidityCharacteristic.setEventHandler(BLESubscribed, humCharacteristicSubscribed);
+    humidityCharacteristic.setEventHandler(BLEUnsubscribed, humCharacteristicUnsubscribed);
+    
     ledCharacteristic.setEventHandler(BLEWritten, ledCharacteristicWritten);
   
     characteristic.setValue(0);
+
+    temperatureCharacteristic.setValue(1.0f);
+    humidityCharacteristic.setValue(2.0f);
+    
     ledCharacteristic.setValue(0);
   
     BLE.begin();
   
     Serial.println("BLE ready");
-    /*//set timer0 interrupt at 2kHz
-    TCCR0A = 0;// set entire TCCR0A register to 0
-    TCCR0B = 0;// same for TCCR0B
-    TCNT0 = 0;//initialize counter value to 0
-    // set compare match register for 2khz increments
-    OCR0A = 124;// = (16*10^6) / (2000*64) - 1 (must be <256)
-    // turn on CTC mode
-    TCCR0A |= (1 << WGM01);
-    // Set CS01 and CS00 bits for 64 prescaler
-    TCCR0B |= (1 << CS01) | (1 << CS00);
-    // enable timer compare interrupt
-    TIMSK0 |= (1 << OCIE0A);*/
   
     //set timer1 interrupt at 4Hz
     TCCR1A = 0;// set entire TCCR1A register to 0
@@ -159,9 +164,9 @@ void loop() {
                 
                 buttonState = reading;
                 
-                    if (buttonState == HIGH ){//&& notifySub == true) {
-                      
-                        setCharacteristicValue();
+                    if (buttonState == HIGH && notifySub == true) {
+                        charCounter++;
+                        setCharacteristicValue(charCounter);
                     
                     }
                 }
@@ -180,7 +185,31 @@ void loop() {
     }
 }
 
-void setCharacteristicValue() {
+void tempCharacteristicSubscribed(BLECentral& central, BLECharacteristic& characteristic) {
+    // characteristic subscribed event handler
+    Serial.println(F("temp Characteristic event, subscribed"));
+    notifySub = true;
+}
+
+void tempCharacteristicUnsubscribed(BLECentral& central, BLECharacteristic& characteristic) {
+    // characteristic unsubscribed event handler
+    Serial.println(F("temp Characteristic event, unsubscribed"));
+    notifySub = false;
+}   
+
+void humCharacteristicSubscribed(BLECentral& central, BLECharacteristic& characteristic) {
+    // characteristic subscribed event handler
+    Serial.println(F("hum Characteristic event, subscribed"));
+    notifySub = true;
+}
+
+void humCharacteristicUnsubscribed(BLECentral& central, BLECharacteristic& characteristic) {
+    // characteristic unsubscribed event handler
+    Serial.println(F("hum Characteristic event, unsubscribed"));
+    notifySub = false;
+}   
+
+/*void setCharacteristicValue() {
     //int reading = rand();
     int reading = random(1, 5);
     //int reading = 1;
@@ -190,6 +219,15 @@ void setCharacteristicValue() {
     Serial.print(F("New value: "));
     Serial.println(characteristic.value());
     lastReading = reading;
+}*/
+
+void setCharacteristicValue(int charCounter) {
+
+    //characteristic.setValue(charCounter);
+    temperatureCharacteristic.setValue(10.12f);
+    humidityCharacteristic.setValue(2.0);
+
+    Serial.println(temperatureCharacteristic.value());
 }
 
 void BLEConnectHandler(BLECentral& central) {
@@ -217,6 +255,7 @@ void ledCharacteristicWritten(BLECentral& central, BLECharacteristic& chara) {
 void characteristicSubscribed(BLECentral& central, BLECharacteristic& characteristic) {
     // characteristic subscribed event handler
     Serial.println(F("Characteristic event, subscribed"));
+    charCounter = 0;
     notifySub = true;
 }
 
