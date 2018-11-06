@@ -47,8 +47,8 @@ boolean notifySub = false;
 BLEService service = BLEService(BLE_SER); //https://www.bluetooth.com/specifications/gatt/services
 //BLEFloatCharacteristic characteristic = BLEFloatCharacteristic(BLE_CHAR, BLERead | BLEWrite | BLEWriteWithoutResponse | BLENotify); https://www.bluetooth.com/specifications/gatt/characteristics
 BLEUnsignedShortCharacteristic characteristic = BLEUnsignedShortCharacteristic(BLE_CHAR, BLERead | BLEWrite | BLEWriteWithoutResponse | BLENotify /*| BLEIndicate*/);
-BLEFloatCharacteristic temperatureCharacteristic = BLEFloatCharacteristic(BLE_CHAR_TEMP, BLERead | BLENotify /*| BLEIndicate*/);
-BLEFloatCharacteristic humidityCharacteristic = BLEFloatCharacteristic(BLE_CHAR_HUM, BLERead | BLENotify /*| BLEIndicate*/);
+BLEDoubleCharacteristic temperatureCharacteristic = BLEDoubleCharacteristic(BLE_CHAR_TEMP, BLERead | BLENotify /*| BLEIndicate*/);
+BLEDoubleCharacteristic humidityCharacteristic = BLEDoubleCharacteristic(BLE_CHAR_HUM, BLERead | BLENotify /*| BLEIndicate*/);
 BLEDescriptor descriptor = BLEDescriptor(BLE_DESC_NUM, BLE_DESC_VAL); //https://www.bluetooth.com/specifications/gatt/descriptors
 
 BLEService ledService = BLEService(LED_SER);
@@ -106,8 +106,8 @@ void setup() {
   
     characteristic.setValue(0);
 
-    temperatureCharacteristic.setValue(1.0f);
-    humidityCharacteristic.setValue(2.0f);
+    temperatureCharacteristic.setValue(1.0);
+    humidityCharacteristic.setValue(2.0);
     
     ledCharacteristic.setValue(0);
   
@@ -224,7 +224,7 @@ void humCharacteristicUnsubscribed(BLECentral& central, BLECharacteristic& chara
 void setCharacteristicValue(int charCounter) {
 
     //characteristic.setValue(charCounter);
-    temperatureCharacteristic.setValue(10.12f);
+    temperatureCharacteristic.setValue(10.12);
     humidityCharacteristic.setValue(2.0);
 
     Serial.println(temperatureCharacteristic.value());

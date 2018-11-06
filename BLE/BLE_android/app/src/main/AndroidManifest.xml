@@ -23,7 +23,6 @@
         </activity>
         <activity android:name=".DeviceDescriptionActivity" />
         <activity android:name=".CharacteristicDescriptionActivity" />
-        <activity android:name=".GATTActivity"></activity>
     </application>
 
 </manifest>

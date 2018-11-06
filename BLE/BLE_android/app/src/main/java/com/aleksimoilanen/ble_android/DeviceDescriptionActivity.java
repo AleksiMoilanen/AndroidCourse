@@ -6,8 +6,10 @@ import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
+import android.content.Intent;
 import android.nfc.Tag;
 import android.os.Handler;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -22,8 +24,10 @@ import android.widget.Toast;
 import org.w3c.dom.Text;
 
 import java.nio.ByteBuffer;
+import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -56,6 +60,17 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
     private UUID ledService_UUID = convertFromInteger(0xfff0);
     private UUID ledChar_UUID = convertFromInteger(0xfff1);
 
+    public final static String ACTION_GATT_CONNECTED = "blereceiver.ACTION_GATT_CONNECTED";
+    public final static String ACTION_GATT_DISCONNECTED = "blereceiver.ACTION_GATT_DISCONNECTED";
+    public final static String ACTION_GATT_SERVICES_DISCOVERED = "blereceiver.ACTION_GATT_SERVICES_DISCOVERED";
+
+    public final static String ACTION_TEMPERATURERE_UPDATE = "blereceiver.ACTION_TEMPERATURERE_UPDATE";
+
+    public final static String ACTION_MESSAGE_SERVICE_ONLINE = "blereceiver.ACTION_MESSAGE_SERVICE_ONLINE";
+
+    public final static String EXTRA_TEMPERATURERE_DATA = "blereceiver.EXTRA_TEMPERATURERE_DATA";
+
+    public final static String NOT_SUPPORT_TEMPERATURE_SERVICE = "blereceiver.NOT_SUPPORT_TEMPERATURE_SERVICE";
 
     private SeekBar seekBar;
 
@@ -388,27 +403,55 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
 
             //int value = Integer.valueOf(wrap.get());
 
-            Log.i(TAG, String.valueOf(characteristic.getUuid()));
+            Log.i(TAG, "PrintCharacteristic: " + String.valueOf(characteristic.getUuid()));
+            Log.d(TAG, String.format(HexUtils.displayHex(characteristic.getValue())));
 
             data = characteristic.getValue();
             ByteBuffer wrap = ByteBuffer.wrap(data);
 
-            int value = Integer.valueOf(wrap.get());
+            //double value = ByteBuffer.wrap(data).getDouble();
 
-            Log.i(TAG, String.valueOf(value));
+            //double kakka = Double.valueOf(wrap.get());
+            //int value = Integer.valueOf(wrap.get());
 
 
-            for (int i = 0; i < 6; i++){
-                Log.i(TAG, String.valueOf(i) + " " + String.valueOf(characteristic.getFloatValue(BluetoothGattCharacteristic.FORMAT_FLOAT, i)));
-                Log.i(TAG, String.valueOf(i) + " " + String.valueOf(characteristic.getFloatValue(BluetoothGattCharacteristic.FORMAT_SFLOAT, i)));
+            try{
+                double kakka = characteristic.getFloatValue(BluetoothGattCharacteristic.FORMAT_FLOAT, 1);
+                double value = ByteBuffer.wrap(data).getDouble();
+                charValue.setText(String.valueOf(value));
+                Log.i(TAG, String.valueOf(value));
+                //Log.i(TAG, String.valueOf(kakka));
+            } catch (Exception e){
+                Log.i(TAG, e.toString());
             }
 
 
+        /*
+        final UUID uuid = characteristic.getUuid();
+
+        Log.d(TAG, String.format("Received TX: %s", uuid + HexUtils.displayHex(characteristic.getValue())));
+
+        try {
+            String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
+            if (temperatureCharUUID.equals(uuid)) {
+                double value = characteristic.getFloatValue(BluetoothGattCharacteristic.FORMAT_FLOAT, 1);
+                //startNotificationForeground(value);
+
+                final Intent intent = new Intent(ACTION_TEMPERATURERE_UPDATE);
+                intent.putExtra("UUID", uuid);
+                intent.putExtra(EXTRA_TEMPERATURERE_DATA, value);
+                LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+            } else {
+                Log.v(TAG, "[" + currentDateTimeString + "] UUID: " + uuid.toString());
+            }
+        } catch (Exception e) {
+            Log.e(TAG, e.toString());
+        }
             //Log.i(TAG, String.valueOf(value));
             //charValue.setText(String.valueOf(value));
 
             //new UpdateThingspeakTask(value, 1.1f).execute();
-        //}
+        //}*/
     }
 
     // Write custom characteristic value (from editText) to default service and characteristic

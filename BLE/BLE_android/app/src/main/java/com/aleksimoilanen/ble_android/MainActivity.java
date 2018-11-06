@@ -8,6 +8,7 @@ import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -23,8 +24,10 @@ import android.widget.Toast;
 
 import com.aleksimoilanen.ble_android.adapter.BluetoothLeListAdapter;
 
+
 public class MainActivity extends ListActivity implements SwipeRefreshLayout.OnRefreshListener {
 
+    String TAG = "paska";
     private SwipeRefreshLayout mSwipeRefreshLayout;
 
     private static final int REQUEST_CODE_COARSE_PERMISSION = 1;
@@ -201,4 +204,40 @@ public class MainActivity extends ListActivity implements SwipeRefreshLayout.OnR
             }
         }, 2000);
     }
+
+    private final BroadcastReceiver uartStatusChangeReceiver = new BroadcastReceiver() {
+
+        public void onReceive(Context context, final Intent intent) {
+            String action = intent.getAction();
+            if (action.equals(DeviceDescriptionActivity.ACTION_GATT_CONNECTED)) {
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        //mState = BleConnectionStatus.CONNECTED;
+                        //updateConnectionState();
+                    }
+                });
+            } else if (action.equals(DeviceDescriptionActivity.ACTION_GATT_DISCONNECTED)) {
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        /*mState = BleConnectionStatus.DISCONNECTED;
+                        updateConnectionState();
+                        if (mService != null) {
+                            mService.close();
+                        }*/
+                    }
+                });
+            } else if (action.equals(DeviceDescriptionActivity.NOT_SUPPORT_TEMPERATURE_SERVICE)) {
+                Toast.makeText(MainActivity.this, "No temp", Toast.LENGTH_SHORT).show();
+            } else if (action.equals(DeviceDescriptionActivity.ACTION_TEMPERATURERE_UPDATE)) {
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        double temperature = intent.getDoubleExtra(DeviceDescriptionActivity.EXTRA_TEMPERATURERE_DATA, 0);
+                        //labelTemperature.setText(String.format(getString(R.string.temperature_template), temperature));
+                        Log.i(TAG, String.valueOf(temperature));
+                    }
+                });
+            }
+
+        }
+    };
 }
