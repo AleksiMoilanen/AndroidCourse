@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="gain_array">
+        <item>2/3 (default)</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+    </string-array>
+
+    <string-array name="sps_array">
+        <item>1600 (default)</item>
+        <item>128</item>
+        <item>250</item>
+        <item>490</item>
+        <item>920</item>
+        <item>2400</item>
+        <item>3300</item>
+    </string-array>
+
+</resources>
