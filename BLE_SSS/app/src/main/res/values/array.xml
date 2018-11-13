@@ -4,9 +4,9 @@
         <item>2/3 (default)</item>
         <item>1</item>
         <item>2</item>
-        <item>3</item>
         <item>4</item>
-        <item>5</item>
+        <item>8</item>
+        <item>16</item>
     </string-array>
 
     <string-array name="sps_array">
@@ -17,6 +17,13 @@
         <item>920</item>
         <item>2400</item>
         <item>3300</item>
+    </string-array>
+
+    <string-array name="readReq_array">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
     </string-array>
 
 </resources>

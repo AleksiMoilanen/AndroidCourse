@@ -32,42 +32,21 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
     private static final int STATE_CONNECTING = 1;
     private static final int STATE_CONNECTED = 2;
 
-    private TextView descriptionMac;
-    private TextView descriptionServices;
-    private TextView descriptionCharacteristic;
+
 
     private Spinner gainSpinner;
     private Spinner spsSpinner;
+    private Spinner readReqSpinner;
 
-    private UUID servUUID = convertFromInteger(0xaaa0);
+    private UUID servUUID = convertFromInteger(0xfff0);
 
-    private UUID charUUID = convertFromInteger(0xaaa1);
-    private UUID temperatureCharUUID = convertFromInteger(0xaaa2);
-    private UUID humidityCharUUID = convertFromInteger(0xaaa3);
+    private UUID charUUID = convertFromInteger(0xfff1);
+    private UUID adcValueCharUUID = convertFromInteger(0xfff2);
 
     private UUID descUUID = convertFromInteger(0x2901);
 
     //Notify descriptor UUID
     private UUID cccdUUID = convertFromInteger(0x2902);
-
-    private UUID ledService_UUID = convertFromInteger(0xfff0);
-    private UUID ledChar_UUID = convertFromInteger(0xfff1);
-
-    public final static String ACTION_GATT_CONNECTED = "blereceiver.ACTION_GATT_CONNECTED";
-    public final static String ACTION_GATT_DISCONNECTED = "blereceiver.ACTION_GATT_DISCONNECTED";
-    public final static String ACTION_GATT_SERVICES_DISCOVERED = "blereceiver.ACTION_GATT_SERVICES_DISCOVERED";
-
-    public final static String ACTION_TEMPERATURERE_UPDATE = "blereceiver.ACTION_TEMPERATURERE_UPDATE";
-
-    public final static String ACTION_MESSAGE_SERVICE_ONLINE = "blereceiver.ACTION_MESSAGE_SERVICE_ONLINE";
-
-    public final static String EXTRA_TEMPERATURERE_DATA = "blereceiver.EXTRA_TEMPERATURERE_DATA";
-
-    public final static String NOT_SUPPORT_TEMPERATURE_SERVICE = "blereceiver.NOT_SUPPORT_TEMPERATURE_SERVICE";
-
-    private SeekBar seekBar;
-
-    private boolean notifySubState = false;
 
     public UUID convertFromInteger(int i) {
         final long MSB = 0x0000000000001000L;
@@ -87,6 +66,7 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
                     break;
                 case STATE_DISCONNECTED:
                     Log.e(TAG, "STATE_DISCONNECTED");
+                    finish();
                     break;
                 case STATE_CONNECTING:
                     Log.i(TAG, "STATE_CONNECTING");
@@ -102,8 +82,14 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
 
             Log.i(TAG, "SERVICE_DISCOVERED");
 
-            BluetoothGattCharacteristic chara = gatt.getService(servUUID).getCharacteristic(charUUID);
+            BluetoothGattCharacteristic chara = gatt.getService(servUUID).getCharacteristic(adcValueCharUUID);
             Log.i(TAG, String.valueOf(chara));
+
+            gatt.setCharacteristicNotification(chara, true);
+
+            BluetoothGattDescriptor desc = chara.getDescriptor(cccdUUID);
+            desc.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+            gatt.writeDescriptor(desc);
         }
 
         @Override
@@ -117,7 +103,7 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicChanged(gatt, characteristic);
             Log.i(TAG, "CHARACTERISTIC_CHANGED");
-            printharacteristic(characteristic);
+            printCharacteristic(characteristic);
         }
 
         @Override
@@ -177,6 +163,12 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
         spsAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spsSpinner.setAdapter(spsAdapter);
 
+        readReqSpinner = findViewById(R.id.read_spinner);
+        ArrayAdapter<CharSequence> readReqAdapter = ArrayAdapter.createFromResource(this,
+                R.array.readReq_array, android.R.layout.simple_spinner_item);
+        readReqAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        readReqSpinner.setAdapter(readReqAdapter);
+
         connect(device);
     }
 
@@ -209,13 +201,13 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
             case "2":
                 value[0] += (byte) (3);
                 break;
-            case "3":
+            case "4":
                 value[0] += (byte) (4);
                 break;
-            case "4":
+            case "8":
                 value[0] += (byte) (5);
                 break;
-            case "5":
+            case "16":
                 value[0] += (byte) (6);
                 break;
             default:
@@ -253,8 +245,27 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
     }
 
     public void onClickReadValue(View view){
+        String selectedChannel = readReqSpinner.getSelectedItem().toString();
+
         byte[] value = new byte[1];
-        value[0] = (byte) (64);
+        value[0] = (byte) (0x00);
+
+        switch (selectedChannel){
+            case "1":
+                value[0] += (byte) (64);
+                break;
+            case "2":
+                value[0] += (byte) (128);
+                break;
+            case "3":
+                value[0] += (byte) (192);
+                break;
+            case "4":
+                value[0] += (byte) (255);
+                break;
+            default:
+                break;
+        }
 
         writeCharacteristic(value[0], true);
     }
@@ -344,128 +355,26 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
 
     }
 
-    public void printharacteristic(BluetoothGattCharacteristic characteristic){
+    public void printCharacteristic(BluetoothGattCharacteristic characteristic){
         byte[] data;
-
-        //if (charUUID.equals(characteristic.getUuid())) {
-
-
-
-        //int value = Integer.valueOf(wrap.get());
-
-        Log.i(TAG, "PrintCharacteristic: " + String.valueOf(characteristic.getUuid()));
-        //Log.d(TAG, String.format(HexUtils.displayHex(characteristic.getValue())));
-
         data = characteristic.getValue();
-        ByteBuffer wrap = ByteBuffer.wrap(data);
+        Log.i(TAG, "Size: " + data.length + " PrintCharacteristic: " + String.valueOf(characteristic.getUuid()));
 
-        //double value = ByteBuffer.wrap(data).getDouble();
+        //Log.i(TAG, "PASKA: " + String.valueOf(data[1]) + " : " + String.valueOf(data[0]));
 
-        //double kakka = Double.valueOf(wrap.get());
-        //int value = Integer.valueOf(wrap.get());
+        int kakka = data[0];
+        if (kakka < 0)
+            kakka = 256 + kakka;
+        kakka |= data[1] << 8;
 
+        TextView valueText = (TextView) findViewById(R.id.adcValueView);
 
         try{
-            double kakka = characteristic.getFloatValue(BluetoothGattCharacteristic.FORMAT_FLOAT, 1);
-            double value = ByteBuffer.wrap(data).getDouble();
-            Log.i(TAG, String.valueOf(value));
-            //Log.i(TAG, String.valueOf(kakka));
-        } catch (Exception e){
-            Log.i(TAG, e.toString());
+            valueText.setText(String.valueOf(kakka));
+        }catch (Exception e){
+            Log.i(TAG, String.valueOf(e));
         }
 
-
-        /*
-        final UUID uuid = characteristic.getUuid();
-
-        Log.d(TAG, String.format("Received TX: %s", uuid + HexUtils.displayHex(characteristic.getValue())));
-
-        try {
-            String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
-            if (temperatureCharUUID.equals(uuid)) {
-                double value = characteristic.getFloatValue(BluetoothGattCharacteristic.FORMAT_FLOAT, 1);
-                //startNotificationForeground(value);
-
-                final Intent intent = new Intent(ACTION_TEMPERATURERE_UPDATE);
-                intent.putExtra("UUID", uuid);
-                intent.putExtra(EXTRA_TEMPERATURERE_DATA, value);
-                LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-            } else {
-                Log.v(TAG, "[" + currentDateTimeString + "] UUID: " + uuid.toString());
-            }
-        } catch (Exception e) {
-            Log.e(TAG, e.toString());
-        }
-            //Log.i(TAG, String.valueOf(value));
-            //charValue.setText(String.valueOf(value));
-
-            //new UpdateThingspeakTask(value, 1.1f).execute();
-        //}*/
-    }
-
-    // Write custom characteristic value (from editText) to default service and characteristic
-    public void onClickWriteCharacteristic(View view){
-
-        EditText editValue = findViewById(R.id.editText);
-
-        try {
-            int val = Integer.valueOf(String.valueOf(editValue.getText()));
-
-            writeCharacteristic(val, true);
-        }
-        catch (IllegalArgumentException e){
-            Toast.makeText(this, "Syötä lähetettävä arvo", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    // Write custom characteristic value (from editText) to custom service (editText3) and characteristic (editText2)
-    public void onClickWriteCustomCharacteristic(View view){
-
-        EditText editValue = findViewById(R.id.editText);
-        EditText editService = findViewById(R.id.editText3);
-        EditText editCharacteristic = findViewById(R.id.editText2);
-
-        String serviceHex, characteristicHex;
-
-        UUID tempServiceUUID, tempCharacteristicUUID;
-
-
-        try
-        {
-            serviceHex = String.valueOf(editService.getText());
-            int value = Integer.parseInt(serviceHex, 16);
-            tempServiceUUID = UUID.fromString("000" + serviceHex + "-0000-1000-8000-00805f9b34fb");
-            Log.d(TAG, "TOIMII");
-        }
-        catch(NumberFormatException nfe)
-        {
-            Log.d(TAG, "EI TOIMI");
-            Toast.makeText(DeviceDescriptionActivity.this, R.string.invalid_serviceHex, Toast.LENGTH_LONG).show();
-            return;
-        }
-
-        try
-        {
-            characteristicHex = String.valueOf(editCharacteristic.getText());
-            int value = Integer.parseInt(characteristicHex, 16);
-            tempCharacteristicUUID = UUID.fromString("000" + characteristicHex + "-0000-1000-8000-00805f9b34fb");
-            Log.d(TAG, "TOIMII");
-        }
-        catch(NumberFormatException nfe)
-        {
-            Log.d(TAG, "EI TOIMI");
-            Toast.makeText(DeviceDescriptionActivity.this, R.string.invalid_characteristicHex, Toast.LENGTH_LONG).show();
-            return;
-        }
-
-        try {
-
-            int val = Integer.valueOf(String.valueOf(editValue.getText()));
-            writeCharacteristic(val, true, tempServiceUUID, tempCharacteristicUUID);
-
-        }
-        catch (IllegalArgumentException e){
-            Toast.makeText(this, "Syötä lähetettävä arvo", Toast.LENGTH_SHORT).show();
-        }
+        Log.i(TAG, String.valueOf(kakka));
     }
 }
