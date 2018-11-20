@@ -20,3 +20,6 @@
 [Android app:](https://github.com/AleksiMoilanen/AndroidCourse/tree/master/BLE/BLE_android)
 
 [Arduino code:](https://github.com/AleksiMoilanen/AndroidCourse/tree/master/BLE/BLE_arduino/BLE)
+
+## BLE SSS
+[BLE Application for Arduino BLE + Sensor -board](https://github.com/AleksiMoilanen/AndroidCourse/tree/master/BLE_SSS)
