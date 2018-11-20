@@ -24,3 +24,6 @@
 
 ## BLE SSS
 [BLE Application for Arduino BLE + Sensor -board](https://github.com/AleksiMoilanen/AndroidCourse/tree/master/BLE_SSS)
+
+## NDK_APP
+[NDK test application](https://github.com/AleksiMoilanen/AndroidCourse/tree/master/NDK_APP)
