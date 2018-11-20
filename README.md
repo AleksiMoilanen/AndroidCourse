@@ -1,5 +1,6 @@
 # AndroidCourse
 
+## [Custom colors for AndroidStudio editor](https://github.com/AleksiMoilanen/AndroidCourse/tree/master/Android%20Studio%20settings)
 
 ## FirstApp
 [Build Your First Android App in Java - CodeLabs tutorial based App](https://github.com/AleksiMoilanen/AndroidCourse/tree/master/FirstApp)
