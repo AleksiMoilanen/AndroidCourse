@@ -27,3 +27,6 @@
 
 ## NDK_APP
 [NDK test application](https://github.com/AleksiMoilanen/AndroidCourse/tree/master/NDK_APP)
+
+## BLE_RGB
+[RGB LED -controller for Arduino](https://github.com/AleksiMoilanen/AndroidCourse/tree/master/BLE_RGB)
