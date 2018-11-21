@@ -9,11 +9,10 @@ import android.bluetooth.BluetoothGattService;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.widget.Toast;
 
 import com.flask.colorpicker.ColorPickerView;
-import com.flask.colorpicker.OnColorChangedListener;
+import com.flask.colorpicker.OnColorSelectedListener;
 
 import java.util.UUID;
 
@@ -32,7 +31,7 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
     private UUID descUUID = convertFromInteger(0x2901);
 
     //Notify descriptor UUID
-    private UUID cccdUUID = convertFromInteger(0x2902);
+    //private UUID cccdUUID = convertFromInteger(0x2902);
 
 
     public UUID convertFromInteger(int i) {
@@ -150,16 +149,17 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
 
         ColorPickerView CPV = findViewById(R.id.color_picker_view);
 
-        CPV.addOnColorChangedListener(new OnColorChangedListener() {
+
+        CPV.addOnColorSelectedListener(new OnColorSelectedListener() {
             @Override
-            public void onColorChanged(int selectedColor) {
+            public void onColorSelected(int selectedColor) {
                 int r = (selectedColor >> 16) & 0xFF;
                 int g = (selectedColor >> 8) & 0xFF;
                 int b = (selectedColor >> 0) & 0xFF;
+                Log.i(TAG, String.valueOf(selectedColor));
                 Log.d(TAG, "R [" + r + "] - G [" + g + "] - B [" + b + "]");
-                sendColor(r,g,b);
 
-                writeCharacteristic(selectedColor, true);
+                writeCharacteristic(r, g, b, true);
             }
         });
 
@@ -173,18 +173,8 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
         }
     }
 
-    public void colorPickerOnClick(View view){
-        Log.i(TAG, "PASKA");
+    public void writeCharacteristic(int r, int g, int b, boolean print){
 
-    }
-
-    public void sendColor(int r, int g, int b){
-        Log.i(TAG, String.valueOf(r) + String.valueOf(g) + String.valueOf(b));
-    }
-
-    // Write characteristic to bluetooth device (default service and characteristic)
-    // servUUID, charUUID = default
-    public void writeCharacteristic(int val, boolean print){
         if (mBluetoothGatt == null) {
             Log.e(TAG, "lost connection");
             return;
@@ -203,43 +193,18 @@ public class DeviceDescriptionActivity extends AppCompatActivity {
             return;
         }
 
-        byte[] value = new byte[1];
-        value[0] = (byte) (val & 0xFF);
+        byte[] value = new byte[3];
+        value[0] = (byte) (r);
+        value[1] = (byte) (g);
+        value[2] = (byte) (b);
+
+        Log.i(TAG, "Byte[]: " + String.valueOf(value));
+
+        Log.i(TAG, "RED: " + String.valueOf(value[0]));
+        Log.i(TAG, "GREEN: " + String.valueOf(value[1]));
+        Log.i(TAG, "BLUE: " + String.valueOf(value[2]));
 
         Characteristic.setValue(value);
         mBluetoothGatt.writeCharacteristic(Characteristic);
-    }
-
-    // Write custom characteristic to custom service and characteristic
-    // serviceUUID, charaUUID = custom
-    public void writeCharacteristic(int val, boolean print, UUID serviceUUID, UUID charaUUID){
-
-        if (mBluetoothGatt == null) {
-            Log.e(TAG, "lost connection");
-            return;
-        }
-
-        BluetoothGattService Service = mBluetoothGatt.getService(serviceUUID);
-        if (Service == null) {
-            Log.e(TAG, "service not found!");
-            if (print) Toast.makeText(DeviceDescriptionActivity.this, R.string.wrong_service, Toast.LENGTH_LONG).show();
-            return;
-        }
-
-        BluetoothGattCharacteristic Characteristic = Service.getCharacteristic(charaUUID);
-        if (Characteristic == null) {
-            Log.e(TAG, "char not found!");
-            if (print) Toast.makeText(DeviceDescriptionActivity.this, R.string.wrong_chara, Toast.LENGTH_LONG).show();
-            return;
-        }
-
-        byte[] value = new byte[1];
-        value[0] = (byte) (val & 0xFF);
-
-        Characteristic.setValue(value);
-        mBluetoothGatt.writeCharacteristic(Characteristic);
-
-        if (print) Toast.makeText(DeviceDescriptionActivity.this, R.string.write_ok, Toast.LENGTH_LONG).show();
-
     }
 }
